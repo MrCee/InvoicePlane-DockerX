@@ -1,0 +1,10 @@
+.git
+node_modules/
+vendor/
+*.bak
+.dockerignore
+test.sh
+.env
+invoiceplane_*
+mariadb
+build.log
