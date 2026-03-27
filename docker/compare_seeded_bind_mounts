@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -eu
+
+compare_seed_to_live() {
+  local label="$1"
+  local seed_dir_path="$2"
+  local live_dir_path="$3"
+
+  local missing_count=0
+  local different_count=0
+
+  if [ ! -d "${seed_dir_path}" ]; then
+    echo "INFO: compare skipped for ${label}; seed dir missing: ${seed_dir_path}"
+    return 0
+  fi
+
+  if [ ! -d "${live_dir_path}" ]; then
+    echo "WARN: compare skipped for ${label}; live dir missing: ${live_dir_path}"
+    return 0
+  fi
+
+  echo "=== compare: ${label} ==="
+
+  while IFS= read -r -d '' seed_item; do
+    local rel_path
+    local live_item
+
+    rel_path="${seed_item#${seed_dir_path}/}"
+    live_item="${live_dir_path}/${rel_path}"
+
+    if [ -d "${seed_item}" ]; then
+      if [ ! -d "${live_item}" ]; then
+        echo "WARN: missing directory in live: ${label}/${rel_path}"
+        missing_count=$((missing_count + 1))
+      fi
+      continue
+    fi
+
+    if [ -f "${seed_item}" ]; then
+      if [ ! -e "${live_item}" ]; then
+        echo "WARN: missing file in live: ${label}/${rel_path}"
+        missing_count=$((missing_count + 1))
+        continue
+      fi
+
+      if [ ! -f "${live_item}" ]; then
+        echo "WARN: live path exists but is not a regular file: ${label}/${rel_path}"
+        different_count=$((different_count + 1))
+        continue
+      fi
+
+      if ! cmp -s "${seed_item}" "${live_item}"; then
+        echo "INFO: differs from seed: ${label}/${rel_path}"
+        different_count=$((different_count + 1))
+      fi
+    fi
+  done < <(find "${seed_dir_path}" -mindepth 1 -print0)
+
+  echo "=== compare summary: ${label}: missing=${missing_count} different=${different_count} ==="
+}
+
+compare_seeded_bind_mounts() {
+  compare_seed_to_live \
+    "assets/core/css" \
+    "${SEED_DIR}/assets/core/css" \
+    "${CSS_DIR}"
+
+  compare_seed_to_live \
+    "application/views" \
+    "${SEED_DIR}/application/views" \
+    "${VIEWS_DIR}"
+
+  compare_seed_to_live \
+    "application/language/${IP_LANGUAGE}" \
+    "${SEED_DIR}/application/language/${IP_LANGUAGE}" \
+    "${LANG_DIR}"
+}
+
+compare_seeded_bind_mounts
