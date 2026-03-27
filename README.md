@@ -5,7 +5,7 @@
 ![Platform](https://img.shields.io/badge/platform-Docker-blue)
 ![OS](https://img.shields.io/badge/os-macOS%20%7C%20Linux-lightgrey)
 ![PHP](https://img.shields.io/badge/php-8.4-blueviolet)
-![Database](https://img.shields.io/badge/database-MariaDB-orange)
+![Database](https://img.shields.io/badge/database-MariaDB_11.8.6-orange)
 ![App](https://img.shields.io/badge/app-InvoicePlane-6f42c1)
 ![Workflow](https://img.shields.io/badge/workflow-bin%2Fup.sh-critical)
 ![Recovery](https://img.shields.io/badge/recovery-first-success)
