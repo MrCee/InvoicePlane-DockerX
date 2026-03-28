@@ -32,7 +32,15 @@ ensure_dir() {
 }
 
 dir_empty() {
-  [ -z "$(ls -A "$1" 2>/dev/null || true)" ]
+  if [ ! -d "$1" ]; then
+    return 0
+  fi
+
+  if [ -z "$(find "$1" -mindepth 1 ! -name '.gitkeep' -print -quit 2>/dev/null)" ]; then
+    return 0
+  fi
+
+  return 1
 }
 
 copy_dir_if_empty() {

@@ -39,3 +39,11 @@ cache/
 *.swo
 *~
 
+
+# Runtime-seeded bind-mount content (not tracked)
+invoiceplane_css/**
+!invoiceplane_css/.gitkeep
+invoiceplane_language/**
+!invoiceplane_language/.gitkeep
+invoiceplane_views/**
+!invoiceplane_views/.gitkeep
