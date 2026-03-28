@@ -19,60 +19,53 @@
 
 ## 🧠 What This Project Is
 
-**InvoicePlane-DockerX** is a **rebuild-safe, recovery-aware, built for real-world use InvoicePlane deployment**.
+**InvoicePlane-DockerX** is a **modern, recovery-aware Docker setup for InvoicePlane** designed to behave predictably across installs, rebuilds, and data recovery scenarios.
 
-It is not just a container that happens to start.
+This is not just a container that starts.
 
-It is designed to:
+It is a controlled system that:
 
-- install cleanly  
-- rebuild safely  
-- preserve important state on the host  
-- expose runtime behavior clearly  
-- recover older InvoicePlane systems without blind import guesswork  
+- installs cleanly  
+- avoids setup and login loops  
+- keeps host and container state aligned  
+- exposes what the system is actually doing  
+- safely recovers older InvoicePlane data across versions  
 
-This project treats InvoicePlane as a system that must survive:
+It is built for the reality that systems do not stay perfect.
 
-- rebuilds  
-- resets  
-- broken installs  
-- stale environments  
-- historical data recovery work  
+They get rebuilt, reset, migrated, and repaired.
 
 ---
 
 ## 🧩 Why This Repository Exists
 
-There are many Docker setups for InvoicePlane.
-
-Most focus on one goal:
+Most InvoicePlane Docker setups aim for one thing:
 
 > “Get the container running.”
 
-This repository solves a different problem:
+That is not the hard part.
 
-> **Make InvoicePlane predictable, recoverable, and safe to operate over time.**
+The real problems show up after that:
 
-Common issues with typical setups:
+- installs that loop or never fully complete  
+- `.env` and runtime state drifting out of sync  
+- rebuilds breaking previously working systems  
+- database imports failing across versions  
+- no clear signal that the system is actually ready  
 
-- setup loops after installation  
-- `.env` and container state drifting out of sync  
-- database imports breaking across versions  
-- rebuilds silently breaking working systems  
-- no clear way to verify when the system is actually ready  
-
-This project was built to eliminate those failure modes.
+This repository exists to solve those problems.
 
 It introduces:
 
 - a controlled startup interface (`bin/up.sh`)  
-- a state-aware finalizer (no setup loops)  
+- a guided install with a backend-aware finalizer  
 - a reconcile-only database import model  
-- explicit bind-mounted overrides  
-- a documented safety and recovery model  
+- explicit, host-visible state  
+- a recovery-first operating approach  
 
-The result is not just a deployment —  
-it is an **practical way to run this system**.
+The goal is simple:
+
+> **Make InvoicePlane safe to run over time — not just easy to start once.**
 
 ---
 
@@ -110,7 +103,7 @@ Because `bin/up.sh` handles what people usually forget:
 This gives you a **repeatable, predictable startup path**.
 
 Read more:  
-[`docs/operator-workflow.md`](docs/operator-workflow.md)
+[`docs/setup.md`](docs/setup.md)
 
 ---
 
@@ -205,12 +198,8 @@ Run:
 
 Read more:
 
-- [`docs/invoiceplane-db-import.md`](docs/invoiceplane-db-import.md)  
-- [`docs/recovery-philosophy.md`](docs/recovery-philosophy.md)  
-- [`docs/safety-model.md`](docs/safety-model.md)  
+- [`docs/recovery.md`](docs/recovery.md)  
 - [`docs/table-strategy-matrix.md`](docs/table-strategy-matrix.md)  
-- [`docs/execution-report.md`](docs/execution-report.md)  
-- [`docs/emergency-recovery.md`](docs/emergency-recovery.md)  
 
 ---
 
@@ -335,8 +324,8 @@ This is the **supported startup path**.
 
 ### 4. Use docs when needed
 
-- [`docs/operator-workflow.md`](docs/operator-workflow.md)  
-- [`docs/emergency-recovery.md`](docs/emergency-recovery.md)  
+- [`docs/setup.md`](docs/setup.md)  
+- [`docs/recovery.md`](docs/recovery.md)  
 - [`docs/dev-reset-install.md`](docs/dev-reset-install.md)  
 - [`docs/pdf-footer-override.md`](docs/pdf-footer-override.md)
 

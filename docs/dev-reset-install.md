@@ -46,6 +46,5 @@ Use it only when you actually want to destroy local install state.
 
 ## Related docs
 
-- [Operator Workflow](./operator-workflow.md)
-- [Emergency Recovery](./emergency-recovery.md)
-
+- [Setup](./setup.md)
+- [Emergency Recovery](./recovery.md)

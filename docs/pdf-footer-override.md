@@ -76,6 +76,5 @@ When reviewing or changing footer behavior:
 
 ## Related docs
 
-- [Operator Workflow](./operator-workflow.md)
+- [Setup](./setup.md)
 - [Dev Reset Install](./dev-reset-install.md)
-

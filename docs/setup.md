@@ -1,10 +1,10 @@
-# Operator Workflow
+# Setup and Startup
 
 [← Back to README](../README.md)
 
 ## Overview
 
-This project is built to be operated through `bin/`, not through ad hoc command memory.
+This project is designed to be operated through `bin/`, not through ad hoc commands.
 
 The main idea is simple:
 
@@ -53,12 +53,3 @@ Use the repository in this order:
 2. browser installer / finalizer flow
 3. docs-guided recovery tools when needed
 4. explicit reset or recovery scripts only when you mean it
-
-## Related docs
-
-- [Emergency Recovery](./emergency-recovery.md)
-- [Safety Model](./safety-model.md)
-- [DB Import](./invoiceplane-db-import.md)
-- [PDF Footer Override](./pdf-footer-override.md)
-- [Dev Reset Install](./dev-reset-install.md)
-
