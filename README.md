@@ -19,286 +19,22 @@
 
 ## 🧠 What This Project Is
 
-**InvoicePlane-DockerX** is a **modern, recovery-aware Docker setup for InvoicePlane** designed to behave predictably across installs, rebuilds, and data recovery scenarios.
+**InvoicePlane-DockerX** is a **rebuild-safe, recovery-aware Docker setup for InvoicePlane**.
+
+It is designed to behave predictably across:
+
+- fresh installs  
+- rebuilds  
+- migrations  
+- recovery scenarios  
 
 This is not just a container that starts.
 
-It is a controlled system that:
-
-- installs cleanly  
-- avoids setup and login loops  
-- keeps host and container state aligned  
-- exposes what the system is actually doing  
-- safely recovers older InvoicePlane data across versions  
-
-It is built for the reality that systems do not stay perfect.
-
-They get rebuilt, reset, migrated, and repaired.
+It is a system designed to **manage state correctly across installs, rebuilds, and recovery**.
 
 ---
 
-## 🧩 Why This Repository Exists
-
-Most InvoicePlane Docker setups aim for one thing:
-
-> “Get the container running.”
-
-That is not the hard part.
-
-The real problems show up after that:
-
-- installs that loop or never fully complete  
-- `.env` and runtime state drifting out of sync  
-- rebuilds breaking previously working systems  
-- database imports failing across versions  
-- no clear signal that the system is actually ready  
-
-This repository exists to solve those problems.
-
-It introduces:
-
-- a controlled startup interface (`bin/up.sh`)  
-- a guided install with a backend-aware finalizer  
-- a reconcile-only database import model  
-- explicit, host-visible state  
-- a recovery-first operating approach  
-
-The goal is simple:
-
-> **Make InvoicePlane safe to run over time — not just easy to start once.**
-
----
-
-## ✨ What Makes This Different
-
-Most Docker repos stop at:
-
-> “Container is running. Good luck.”
-
-This project goes further.
-
----
-
-### 🔁 Operator-first startup
-
-The stack should be started through:
-
-```bash
-./bin/up.sh
-```
-
-Not through ad hoc `docker compose up` commands.
-
-Why?
-
-Because `bin/up.sh` handles what people usually forget:
-
-- prepares bind-mounted directories  
-- synchronizes environment expectations  
-- validates compose configuration  
-- starts services in correct order  
-- waits for database readiness  
-- ensures application startup stability  
-
-This gives you a **repeatable, predictable startup path**.
-
-Read more:  
-[`docs/setup.md`](docs/setup.md)
-
----
-
-### 🧭 Guided install + finalisation (no setup loops)
-
-This project provides a **guided install flow** combining:
-
-- the standard InvoicePlane installer  
-- a backend-aware finalizer  
-
-![InvoicePlane Finalizer](docs/images/finalizer.png)
-
-After completing the installer, the finalizer:
-
-- synchronizes `.env` with container runtime state  
-- ensures `SETUP_COMPLETED` and `DISABLE_SETUP` are aligned  
-- generates and verifies encryption values  
-- validates application reachability  
-- exposes a full backend log  
-- provides a clear **“Continue to Login”** path  
-
-#### Why this matters
-
-Without this layer, systems commonly fail with:
-
-- setup loops  
-- login loops  
-- mismatched `.env` vs container state  
-- partially completed installs  
-- rebuilds breaking previously working setups  
-
-#### What this solves
-
-The finalizer acts as a **single source of truth**, ensuring:
-
-- no hidden getting out of sync between host and container  
-- no ambiguity about install completion  
-- no guessing when the system is safe to use  
-
-#### Result
-
-- predictable install → login transition  
-- faster time to first use  
-- dramatically reduced setup failure cases  
-
----
-
-### 💾 Persistent storage with explicit bind mounts
-
-Important state is kept on the host, not inside containers.
-
-This includes:
-
-- MariaDB data  
-- uploads  
-- logs  
-- finalize state  
-- helper overrides  
-- views / CSS / language overrides  
-
-This makes:
-
-- rebuilds safe  
-- customizations visible  
-- debugging easier  
-- recovery predictable  
-
-Bind-mounted override paths are seeded from the InvoicePlane defaults only when the target directory is empty.
-
-This means first-run environments can be populated automatically, while existing host-side customizations are left in place.
-
-In normal operation, custom templates, language overrides, and other host-managed files are not blindly overwritten on startup.
-
----
-
-### 🛡️ Recovery-first database tooling
-
-This project uses a **reconcile-only import model**.
-
-Instead of importing SQL dumps directly into the live database, data is:
-
-- loaded into a temporary database  
-- compared against a fresh installer-created schema  
-- merged using controlled strategies  
-
-This approach:
-
-- works across InvoicePlane versions  
-- tolerates schema differences  
-- avoids fragile direct imports  
-- produces consistent, safe recovery results  
-
-Run:
-
-```bash
-./bin/invoiceplane-db-import.sh
-```
-
-Read more:
-
-- [`docs/recovery.md`](docs/recovery.md)  
-- [`docs/table-strategy-matrix.md`](docs/table-strategy-matrix.md)  
-
----
-
-### 📄 Enhanced PDF footer behavior
-
-This project includes a custom helper override for PDF rendering.
-
-Highlights:
-
-- unified invoice and quote footer behavior  
-- split footer layout  
-- document reference on every page  
-- page numbers on every page  
-- consistent multi-page rendering  
-- override tracked via bind mount  
-
-Read more:
-
-- [`docs/pdf-footer-override.md`](docs/pdf-footer-override.md)
-
----
-
-## 🧠 Design Principles
-
-This project is built around a small set of core design choices:
-
-### 🔍 No hidden state
-
-Everything that matters should be:
-
-- visible  
-- inspectable  
-- traceable  
-
-If something affects runtime behavior, it should not be buried inside a container.
-
----
-
-### 🔁 No getting out of sync between host and container
-
-The host `.env`, container environment, and application state must agree.
-
-If they do not, the system is considered broken.
-
-The finalizer exists to enforce this alignment.
-
----
-
-### 🛠️ No blind operations
-
-No direct database imports.  
-No silent overwrites.  
-No “just run this and hope.”
-
-Every operation should be:
-
-- staged  
-- understood  
-- controlled  
-
----
-
-### 🧬 Schema-aware recovery over fragile imports
-
-Data should be adapted into the correct schema, not forced into it.
-
-That is why reconcile-only import exists.
-
----
-
-### 🔐 Explicit over implicit
-
-Overrides (helpers, views, config) should be:
-
-- bind-mounted  
-- tracked in Git  
-- easy to audit  
-
-Nothing important should live only inside a container layer.
-
----
-
-### 🧭 Predictable operation
-
-You should always know:
-
-- what state the system is in  
-- why it is in that state  
-- what will happen next  
-
----
-
-## ⚡ Quick Start
+## ⚡ Quick Start (Recommended Path)
 
 ### 1. Get the project
 
@@ -319,14 +55,15 @@ Edit `.env` to suit your system.
 
 ---
 
-### 3. Start the stack (supported path)
+### 3. Start the stack
 
 ```bash
 ./bin/up.sh
 ```
 
-This is the **only supported startup method**.  
-Do not start the stack manually with `docker compose up`.
+This is the **only supported startup method**.
+
+It keeps preparation, validation, and startup behavior consistent across NAS, Linux, and macOS environments.
 
 ---
 
@@ -339,23 +76,227 @@ Do not start the stack manually with `docker compose up`.
 
 ---
 
-### 5. Use docs when needed
+### 5. Done
 
-- [`docs/setup.md`](docs/setup.md) — install and startup flow  
-- [`docs/operations.md`](docs/operations.md) — runtime tasks (including password reset)  
-- [`docs/recovery.md`](docs/recovery.md) — database import and recovery  
-- [`docs/dev-reset-install.md`](docs/dev-reset-install.md) — destructive reset  
-- [`docs/pdf-footer-override.md`](docs/pdf-footer-override.md) — PDF behavior  
-
----
-
-### 6. Done
-
-You should now have a working system with:
+You should now have:
 
 - a completed install  
 - synchronized `.env` and runtime state  
 - no setup or login loops  
+
+---
+
+## ✨ What This Setup Actually Does
+
+### 🔁 Operator-first startup
+
+Start the stack with:
+
+```bash
+./bin/up.sh
+```
+
+This ensures:
+
+- bind mounts are prepared  
+- environment is aligned  
+- services start in the correct order  
+- database readiness is handled  
+- application startup is consistent  
+
+---
+
+### 🧭 Guided install + finalisation
+
+The setup flow combines:
+
+- the standard InvoicePlane installer  
+- a backend-aware finalizer  
+
+![InvoicePlane Finalizer](docs/images/finalizer.png)
+
+The finalizer:
+
+- aligns `.env` with runtime state  
+- ensures setup completion state is correct  
+- generates and verifies encryption values  
+- validates application reachability  
+- exposes backend logs  
+- provides a clear **Continue to Login** path  
+
+As part of finalisation, sensible application defaults are applied.
+
+This includes setting the bundled compact invoice templates as the default for new installs, so the system is ready to use without additional configuration.
+
+Result:
+
+- no setup loops  
+- no login loops  
+- no partial installs  
+- a cleaner install-to-login experience  
+
+---
+
+### 💾 Persistent storage with bind mounts
+
+Important state lives on the host:
+
+- MariaDB data  
+- uploads  
+- logs  
+- finalize state  
+- helper overrides  
+- views / CSS / language overrides  
+
+This makes:
+
+- rebuilds safer  
+- debugging easier  
+- customizations visible  
+- recovery predictable  
+
+---
+
+### 📄 Document presentation and PDF customization
+
+This project provides a **safe, non-destructive way to customize document output** in InvoicePlane.
+
+It includes:
+
+- custom invoice and quote templates (including the 2026 compact layouts)  
+- improved PDF footer handling  
+
+New installs default to the compact templates, providing a cleaner and more consistent document layout.  
+Original InvoicePlane templates remain available at all times.
+
+#### Behavior
+
+- templates are added automatically on first run  
+- existing files are never overwritten  
+- user changes are preserved  
+- deleted files are restored from the image  
+- new templates can be introduced safely over time  
+
+#### Custom templates
+
+Custom templates are:
+
+- baked into the image under `/opt/invoiceplane-seeds/views`  
+- copied into the application only if missing  
+
+Structure:
+
+```text
+docker/templates/views/
+  invoice_templates/
+    pdf/
+    public/
+  quote_templates/
+    pdf/
+    public/
+```
+
+Once seeded, templates appear inside InvoicePlane wherever invoice or quote PDF templates are selected.
+
+#### PDF footer improvements
+
+Includes a helper override for more consistent PDF output:
+
+- split footer layout  
+- page numbers on all pages  
+- document reference on each page  
+- stable multi-page rendering  
+
+#### Result
+
+- cleaner, more readable invoices and quotes  
+- safe customization without losing defaults  
+- no manual setup steps  
+- upgrade-safe presentation changes  
+
+More:
+
+- [`docs/pdf-footer-override.md`](docs/pdf-footer-override.md)
+
+---
+
+### 🛡️ Recovery-first database tooling
+
+Database imports are **reconcile-only**.
+
+Instead of importing SQL dumps directly into the live database, data is:
+
+- loaded into a temporary database  
+- compared against a fresh installer-created schema  
+- merged using controlled strategies  
+
+This approach:
+
+- works across InvoicePlane versions  
+- tolerates schema differences  
+- avoids fragile direct imports  
+- produces safer recovery results  
+
+Run:
+
+```bash
+./bin/invoiceplane-db-import.sh
+```
+
+More:
+
+- [`docs/recovery.md`](docs/recovery.md)  
+- [`docs/table-strategy-matrix.md`](docs/table-strategy-matrix.md)  
+
+---
+
+## 🧠 Design Principles
+
+### 🔍 No hidden state
+
+Everything important should be visible, inspectable, and traceable.
+
+---
+
+### 🔁 Host and container must agree
+
+If `.env`, runtime, and application state differ, the system is broken.
+
+The finalizer exists to keep them aligned.
+
+---
+
+### 🛠️ No blind operations
+
+- no direct database imports  
+- no silent overwrites  
+- no unsafe assumptions  
+
+---
+
+### 🧬 Schema-aware recovery
+
+Data should be adapted into the correct schema, not forced into it.
+
+---
+
+### 🔐 Explicit overrides
+
+Overrides should be:
+
+- tracked in Git  
+- easy to audit  
+- intentional  
+
+---
+
+### 🧭 Predictable operation
+
+You should always know:
+
+- what state the system is in  
+- why it is in that state  
+- what will happen next  
 
 ---
 
@@ -372,9 +313,9 @@ You should now have a working system with:
 
 ### `docs/` → knowledge base
 
-- safety  
+- setup  
+- operations  
 - recovery  
-- behavior  
 - overrides  
 
 ---
@@ -405,14 +346,15 @@ Everything should be:
 ./bin/dev-reset-install.sh
 ```
 
-This will reset:
+This resets:
 
 - MariaDB  
 - install state  
 - encryption config  
 
-⚠️ Read first:  
-[`docs/dev-reset-install.md`](docs/dev-reset-install.md)
+⚠️ Read first:
+
+- [`docs/dev-reset-install.md`](docs/dev-reset-install.md)
 
 ---
 
@@ -420,7 +362,7 @@ This will reset:
 
 - developers who want predictable Docker behavior  
 - operators who care about recovery and data safety  
-- people migrating old InvoicePlane installs  
+- people migrating older InvoicePlane installs  
 - anyone tired of setup loops and broken imports  
 
 ---
@@ -433,7 +375,7 @@ This is not:
 
 This is:
 
-> **A recovery-aware, rebuild-safe, state-consistent InvoicePlane operating model.**
+> **A rebuild-safe, recovery-aware, state-consistent InvoicePlane operating model.**
 
 ---
 
