@@ -52,6 +52,10 @@ function h(string $value): string
       --shadow: 0 20px 45px rgba(0, 0, 0, 0.28);
       --radius: 16px;
       --radius-sm: 12px;
+      --glow-good: 0 0 0 1px rgba(31,157,85,0.25), 0 0 22px rgba(31,157,85,0.12);
+      --glow-warn: 0 0 0 1px rgba(217,164,65,0.22), 0 0 22px rgba(217,164,65,0.10);
+      --glow-bad: 0 0 0 1px rgba(214,69,69,0.22), 0 0 22px rgba(214,69,69,0.10);
+      --glow-info: 0 0 0 1px rgba(79,140,255,0.22), 0 0 22px rgba(79,140,255,0.10);
     }
 
     * { box-sizing: border-box; }
@@ -59,7 +63,7 @@ function h(string $value): string
     html, body {
       margin: 0;
       padding: 0;
-      background: linear-gradient(180deg, #0a101b 0%, #0e1524 100%);
+      background: radial-gradient(circle at top, #13203a 0%, #0b1220 46%, #08101c 100%);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       min-height: 100%;
@@ -67,19 +71,21 @@ function h(string $value): string
 
     body { padding: 24px; }
 
-    .shell { max-width: 1080px; margin: 0 auto; }
+    .shell { max-width: 1180px; margin: 0 auto; }
 
     .card {
-      background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+      background: linear-gradient(180deg, rgba(17,26,43,0.96) 0%, rgba(22,34,56,0.96) 100%);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: hidden;
+      backdrop-filter: blur(8px);
     }
 
     .header {
-      padding: 24px 24px 18px 24px;
+      padding: 26px 26px 18px 26px;
       border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%);
     }
 
     .title-row {
@@ -92,13 +98,13 @@ function h(string $value): string
 
     .title-wrap h1 {
       margin: 0;
-      font-size: 28px;
-      line-height: 1.15;
-      letter-spacing: -0.02em;
+      font-size: 30px;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
     }
 
     .title-wrap p {
-      margin: 8px 0 0 0;
+      margin: 9px 0 0 0;
       color: var(--muted);
       font-size: 14px;
     }
@@ -107,7 +113,7 @@ function h(string $value): string
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      min-height: 36px;
+      min-height: 38px;
       padding: 0 14px;
       border-radius: 999px;
       border: 1px solid transparent;
@@ -126,6 +132,7 @@ function h(string $value): string
       background: currentColor;
       opacity: 0.95;
       flex: 0 0 auto;
+      box-shadow: 0 0 14px currentColor;
     }
 
     .pill.idle,
@@ -150,7 +157,11 @@ function h(string $value): string
       border-color: rgba(214, 69, 69, 0.35);
     }
 
-    .content { padding: 24px; display: grid; gap: 18px; }
+    .content {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
 
     .banner {
       display: none;
@@ -166,32 +177,100 @@ function h(string $value): string
     .banner.success { color: #ddffea; background: var(--good-bg); border-color: rgba(31, 157, 85, 0.35); }
     .banner.error { color: #ffdede; background: var(--bad-bg); border-color: rgba(214, 69, 69, 0.35); }
 
-    .meta-grid {
+    .status-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
+      gap: 14px;
     }
 
-    .meta {
-      padding: 14px 16px;
+    .status-card {
+      position: relative;
+      overflow: hidden;
+      padding: 16px 18px;
       border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
+      min-height: 122px;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
     }
 
-    .meta .label {
-      display: block;
+    .status-card::after {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      background: rgba(255,255,255,0.14);
+    }
+
+    .status-card .status-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       color: var(--muted);
-      margin-bottom: 6px;
     }
 
-    .meta .value {
+    .status-card .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 18px currentColor;
+      flex: 0 0 auto;
+    }
+
+    .status-card .status-value {
       display: block;
-      font-size: 15px;
-      word-break: break-word;
+      margin-top: 12px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .status-card .status-detail {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status-card.tone-green {
+      color: var(--good);
+      box-shadow: var(--glow-good);
+    }
+
+    .status-card.tone-green::after {
+      background: linear-gradient(180deg, rgba(31,157,85,0.95) 0%, rgba(31,157,85,0.35) 100%);
+    }
+
+    .status-card.tone-amber {
+      color: var(--warn);
+      box-shadow: var(--glow-warn);
+    }
+
+    .status-card.tone-amber::after {
+      background: linear-gradient(180deg, rgba(217,164,65,0.95) 0%, rgba(217,164,65,0.35) 100%);
+    }
+
+    .status-card.tone-red {
+      color: var(--bad);
+      box-shadow: var(--glow-bad);
+    }
+
+    .status-card.tone-red::after {
+      background: linear-gradient(180deg, rgba(214,69,69,0.95) 0%, rgba(214,69,69,0.35) 100%);
+    }
+
+    .status-card.tone-blue {
+      color: var(--info);
+      box-shadow: var(--glow-info);
+    }
+
+    .status-card.tone-blue::after {
+      background: linear-gradient(180deg, rgba(79,140,255,0.95) 0%, rgba(79,140,255,0.35) 100%);
     }
 
     .terminal-wrap {
@@ -212,14 +291,34 @@ function h(string $value): string
     }
 
     .terminal-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-weight: 700;
       font-size: 14px;
       color: #e5eefc;
     }
 
+    .live-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--info);
+      box-shadow: 0 0 16px var(--info);
+      animation: pulse 1.6s ease-in-out infinite;
+      flex: 0 0 auto;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.75; }
+      50% { transform: scale(1.25); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.75; }
+    }
+
     .terminal-subtitle {
       font-size: 12px;
       color: var(--muted);
+      margin-top: 2px;
     }
 
     .terminal {
@@ -274,10 +373,13 @@ function h(string $value): string
     .ansi-cyan { color: #56d4dd; }
     .ansi-white { color: #f0f6fc; }
 
+    @media (max-width: 980px) {
+      .status-grid { grid-template-columns: 1fr; }
+    }
+
     @media (max-width: 820px) {
       body { padding: 16px; }
       .header, .content { padding: 18px; }
-      .meta-grid { grid-template-columns: 1fr; }
       .terminal { max-height: 52vh; }
     }
   </style>
@@ -289,7 +391,7 @@ function h(string $value): string
         <div class="title-row">
           <div class="title-wrap">
             <h1>InvoicePlane Finalizer</h1>
-            <p>Live finalization status, authoritative backend state, and full log snapshot rendering.</p>
+            <p>Preparing your system for first login.</p>
           </div>
           <div id="statePill" class="pill <?= h($state) ?>"><?= h($state) ?></div>
         </div>
@@ -298,31 +400,31 @@ function h(string $value): string
       <div class="content">
         <div id="statusBanner" class="banner info show"><?= h($message) ?></div>
 
-        <div class="meta-grid">
-        <div id="templateStatusBox" class="meta">
-          <span class="label">Templates</span>
-          <span id="templateStatusValue" class="value">Pending</span>
-        </div>
+        <div class="status-grid">
+          <div id="appCard" class="status-card tone-blue">
+            <div class="status-label"><span class="status-dot"></span><span>App</span></div>
+            <span id="appValue" class="status-value">Checking…</span>
+            <span id="appDetail" class="status-detail">Waiting for reachability signal.</span>
+          </div>
 
-          <div class="meta">
-            <span class="label">Finalizer state</span>
-            <span id="metaState" class="value"><?= h($state) ?></span>
+          <div id="templateCard" class="status-card tone-red">
+            <div class="status-label"><span class="status-dot"></span><span>Templates</span></div>
+            <span id="templateValue" class="status-value">Pending</span>
+            <span id="templateDetail" class="status-detail">Compact template defaults not yet confirmed.</span>
           </div>
-          <div class="meta">
-            <span class="label">App reachability</span>
-            <span id="metaReachability" class="value">Checking…</span>
-          </div>
-          <div class="meta">
-            <span class="label">Last refresh</span>
-            <span id="metaRefresh" class="value">Not yet refreshed</span>
+
+          <div id="readyCard" class="status-card tone-blue">
+            <div class="status-label"><span class="status-dot"></span><span>Ready</span></div>
+            <span id="readyValue" class="status-value">Not yet</span>
+            <span id="readyDetail" class="status-detail">Waiting for finalization to complete.</span>
           </div>
         </div>
 
         <div class="terminal-wrap">
           <div class="terminal-toolbar">
             <div>
-              <div class="terminal-title">Finalizer log</div>
-              <div class="terminal-subtitle">Polling terminal logs now...</div>
+              <div class="terminal-title"><span class="live-dot"></span><span>Live backend log</span></div>
+              <div class="terminal-subtitle">Always visible. Scroll freely while finalization continues.</div>
             </div>
             <div class="helper" id="logMeta">Waiting for log data…</div>
           </div>
@@ -333,7 +435,7 @@ function h(string $value): string
           <button id="continueButton" class="btn success" type="button" disabled>Continue to Login</button>
           <button id="refreshButton" class="btn primary" type="button">Refresh now</button>
           <button id="beginButton" class="btn warn" type="button" style="display:none;">Begin finalization</button>
-          <span id="actionHelper" class="helper">Continue becomes available only after finalizer completion, or after an error when the app is already reachable.</span>
+          <span id="actionHelper" class="helper">Continue unlocks when finalization completes, or when the app is reachable after an error.</span>
         </div>
       </div>
     </div>
@@ -352,9 +454,6 @@ function h(string $value): string
 
       const terminal = document.getElementById('terminal');
       const statePill = document.getElementById('statePill');
-      const metaState = document.getElementById('metaState');
-      const metaReachability = document.getElementById('metaReachability');
-      const metaRefresh = document.getElementById('metaRefresh');
       const statusBanner = document.getElementById('statusBanner');
       const continueButton = document.getElementById('continueButton');
       const refreshButton = document.getElementById('refreshButton');
@@ -362,8 +461,22 @@ function h(string $value): string
       const actionHelper = document.getElementById('actionHelper');
       const logMeta = document.getElementById('logMeta');
 
+      const appCard = document.getElementById('appCard');
+      const appValue = document.getElementById('appValue');
+      const appDetail = document.getElementById('appDetail');
+
+      const templateCard = document.getElementById('templateCard');
+      const templateValue = document.getElementById('templateValue');
+      const templateDetail = document.getElementById('templateDetail');
+
+      const readyCard = document.getElementById('readyCard');
+      const readyValue = document.getElementById('readyValue');
+      const readyDetail = document.getElementById('readyDetail');
+
       let lastKnownState = <?= json_encode($state, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
       let appReachable = false;
+      let lastTemplateStatus = 'pending';
+      let lastTemplateMessage = 'Waiting for compact template defaults.';
 
       function nowString() {
         return new Date().toLocaleString();
@@ -456,7 +569,6 @@ function h(string $value): string
         const safeState = state || 'idle';
         statePill.className = 'pill ' + safeState;
         statePill.textContent = safeState;
-        metaState.textContent = safeState;
       }
 
       function setBanner(kind, text) {
@@ -464,49 +576,92 @@ function h(string $value): string
         statusBanner.textContent = text;
       }
 
-      function updateContinueButton() {
-        const allowContinue = (lastKnownState === 'complete') || (lastKnownState === 'error' && appReachable);
-        continueButton.disabled = !allowContinue;
-
-        if (lastKnownState === 'complete') {
-          actionHelper.textContent = 'Finalizer is complete.';
-        } else if (lastKnownState === 'error' && appReachable) {
-          actionHelper.textContent = 'The finalizer errored, but the app appears reachable. Manual continue is available.';
-        } else if (appReachable) {
-          actionHelper.textContent = 'The app is reachable, but Continue stays locked until the authoritative finalizer state is complete.';
-        } else {
-          actionHelper.textContent = 'Waiting for the app and finalizer state to progress.';
-        }
+      function setStatusCard(card, valueNode, detailNode, tone, valueText, detailText) {
+        card.className = 'status-card ' + tone;
+        valueNode.textContent = valueText;
+        detailNode.textContent = detailText;
       }
 
       function updateBeginButton(state) {
         beginButton.style.display = (state === 'idle') ? '' : 'none';
       }
 
-      function renderStatus(data) {
-        // --- template traffic light ---
-        const templateBox = document.getElementById('templateStatusBox');
-        const templateValue = document.getElementById('templateStatusValue');
+      function updateContinueButton() {
+        const allowContinue = (lastKnownState === 'complete') || (lastKnownState === 'error' && appReachable);
+        continueButton.disabled = !allowContinue;
 
-        if (data.state === 'templates_applied') {
-          templateBox.style.borderColor = 'rgba(31,157,85,0.6)';
-          templateValue.textContent = 'Applied (2026 Compact)';
-        } else if (data.state === 'recreating' || data.state === 'waiting') {
-          templateBox.style.borderColor = 'rgba(217,164,65,0.6)';
-          templateValue.textContent = 'Applying…';
+        if (lastKnownState === 'complete') {
+          actionHelper.textContent = 'Finalization complete. Continue when you are ready.';
+        } else if (lastKnownState === 'error' && appReachable) {
+          actionHelper.textContent = 'The app is reachable, but the finalizer reported an error. Review the log before continuing.';
+        } else if (appReachable) {
+          actionHelper.textContent = 'InvoicePlane is reachable. Waiting for finalizer completion.';
         } else {
-          templateBox.style.borderColor = 'rgba(214,69,69,0.6)';
-          templateValue.textContent = 'Pending';
+          actionHelper.textContent = 'Waiting for app readiness and finalizer progress.';
+        }
+      }
+
+      function renderCompositeState() {
+        const inProgressStates = ['requested', 'updating', 'recreating', 'waiting'];
+
+        if (appReachable) {
+          setStatusCard(appCard, appValue, appDetail, 'tone-green', 'Reachable', 'InvoicePlane is responding.');
+        } else if (inProgressStates.includes(lastKnownState)) {
+          setStatusCard(appCard, appValue, appDetail, 'tone-amber', 'Starting up', 'Waiting for application response.');
+        } else {
+          setStatusCard(appCard, appValue, appDetail, 'tone-red', 'Offline', 'App not reachable yet.');
         }
 
+        if (lastTemplateStatus === 'applied') {
+          setStatusCard(templateCard, templateValue, templateDetail, 'tone-green', '2026 Compact Ready', lastTemplateMessage || 'Bundled compact templates confirmed.');
+        } else if (lastTemplateStatus === 'error') {
+          setStatusCard(templateCard, templateValue, templateDetail, 'tone-red', 'Needs attention', lastTemplateMessage || 'Unable to confirm compact template defaults.');
+        } else if (inProgressStates.includes(lastKnownState)) {
+          setStatusCard(templateCard, templateValue, templateDetail, 'tone-amber', 'Applying defaults', 'Waiting for compact template confirmation.');
+        } else {
+          setStatusCard(templateCard, templateValue, templateDetail, 'tone-red', 'Pending', lastTemplateMessage || 'Compact template defaults not yet applied.');
+        }
+
+        if (lastKnownState === 'complete') {
+          setStatusCard(readyCard, readyValue, readyDetail, 'tone-green', 'Ready to Login', 'Finalizer completed successfully.');
+        } else if (lastKnownState === 'error' && appReachable) {
+          setStatusCard(readyCard, readyValue, readyDetail, 'tone-amber', 'Manual review', 'App reachable, but finalizer reported an error.');
+        } else if (inProgressStates.includes(lastKnownState)) {
+          setStatusCard(readyCard, readyValue, readyDetail, 'tone-blue', 'Finalizing', 'Working through post-install steps.');
+        } else {
+          setStatusCard(readyCard, readyValue, readyDetail, 'tone-red', 'Not ready', 'Waiting for finalization to begin.');
+        }
+
+        if (lastKnownState === 'complete') {
+          setBanner('success', 'InvoicePlane finalizer completed successfully. Review the live log if you want, then continue to login.');
+        } else if (lastKnownState === 'error') {
+          setBanner('error', appReachable
+            ? 'Finalizer reported an error, but the app appears reachable. Review the live log carefully before continuing.'
+            : 'Finalizer reported an error. Review the live log before retrying.');
+        } else if (appReachable) {
+          setBanner('info', 'InvoicePlane is online. Waiting for finalizer completion...');
+        } else {
+          setBanner('info', 'Preparing your install. Live backend activity appears below.');
+        }
+
+        updateContinueButton();
+        updateBeginButton(lastKnownState);
+      }
+
+      function renderStatus(data) {
         const state = typeof data.state === 'string' && data.state ? data.state : 'idle';
         const message = typeof data.message === 'string' && data.message ? data.message : 'No status message.';
+        const templateStatus = typeof data.template_status === 'string' && data.template_status ? data.template_status : 'pending';
+        const templateMessage = typeof data.template_message === 'string' && data.template_message ? data.template_message : 'Waiting for compact template defaults.';
         const log = typeof data.log === 'string' ? data.log : '';
         const timestamp = typeof data.timestamp === 'string' ? data.timestamp : '';
         const logSize = typeof data.log_size !== 'undefined' ? data.log_size : 'unknown';
         const logMtime = typeof data.log_mtime !== 'undefined' ? data.log_mtime : 'unknown';
 
         lastKnownState = state;
+        lastTemplateStatus = templateStatus;
+        lastTemplateMessage = templateMessage;
+
         updateStatePill(state);
 
         const renderedLog = ansiToHtml(log);
@@ -516,23 +671,13 @@ function h(string $value): string
           if (nearBottom) scrollToBottom(terminal);
         }
 
-        logMeta.textContent = 'log_size=' + logSize + ' · log_mtime=' + logMtime;
-        metaRefresh.textContent = nowString() + (timestamp ? ' · state timestamp ' + timestamp : '');
+        const refreshBits = [];
+        if (timestamp) refreshBits.push('State ' + timestamp);
+        if (logMtime) refreshBits.push('Log ' + logMtime);
+        refreshBits.push('Size ' + logSize);
+        logMeta.textContent = refreshBits.join(' · ');
 
-        if (state === 'complete') {
-          setBanner('success', 'InvoicePlane finalizer completed successfully. Review the log if needed, then continue to login.');
-        } else if (state === 'error') {
-          setBanner('error', appReachable
-            ? 'Finalizer reported an error, but the app appears reachable. Review the log carefully before continuing.'
-            : message);
-        } else if (appReachable) {
-          setBanner('info', 'InvoicePlane is online. Waiting for finalizer log to complete...');
-        } else {
-          setBanner('info', message);
-        }
-
-        updateContinueButton();
-        updateBeginButton(state);
+        renderCompositeState();
       }
 
       async function fetchStatus() {
@@ -547,7 +692,7 @@ function h(string $value): string
         } catch (error) {
           updateStatePill(lastKnownState || 'error');
           setBanner('error', 'Unable to fetch finalizer status right now. The page will keep retrying.');
-          metaRefresh.textContent = nowString() + ' · status fetch failed';
+          logMeta.textContent = 'Status fetch failed · ' + nowString();
         }
       }
 
@@ -563,8 +708,7 @@ function h(string $value): string
           appReachable = false;
         }
 
-        metaReachability.textContent = appReachable ? 'App reachable' : 'App not reachable yet';
-        updateContinueButton();
+        renderCompositeState();
       }
 
       async function beginFinalization() {
@@ -579,7 +723,7 @@ function h(string $value): string
             body: 'action=finalize'
           });
           if (!response.ok) throw new Error('HTTP ' + response.status);
-          setBanner('info', 'Finalize request sent. Waiting for finalizer sidecar to process it...');
+          setBanner('info', 'Finalize request sent. Waiting for the finalizer sidecar to process it...');
           await fetchStatus();
         } catch (error) {
           setBanner('error', 'Unable to send finalize request. Review custom-complete.php handling and try again.');
@@ -606,3 +750,4 @@ function h(string $value): string
   </script>
 </body>
 </html>
+

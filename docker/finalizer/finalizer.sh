@@ -5,6 +5,7 @@ STATE_DIR="${STATE_DIR:-/state}"
 WORKSPACE="${WORKSPACE:-/workspace}"
 REQUEST_FILE="${STATE_DIR}/finalize.request"
 STATUS_FILE="${STATE_DIR}/status.json"
+TEMPLATE_STATUS_FILE="${STATE_DIR}/template_status.json"
 LOG_FILE="${STATE_DIR}/finalizer.log"
 LOCK_DIR="${STATE_DIR}/finalizer.lock"
 COMPOSE_FILE="${COMPOSE_FILE:-${WORKSPACE}/docker-compose.yml}"
@@ -72,6 +73,26 @@ write_status() {
   message="${2:-}"
 
   python3 - "$STATUS_FILE" "$state" "$message" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+
+status_file, state, message = sys.argv[1:4]
+payload = {
+    "state": state,
+    "message": message,
+    "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+}
+with open(status_file, "w", encoding="utf-8") as f:
+    json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
+PY
+}
+
+write_template_status() {
+  template_state="${1:-pending}"
+  template_message="${2:-Waiting for compact template defaults.}"
+
+  python3 - "$TEMPLATE_STATUS_FILE" "$template_state" "$template_message" <<'PY'
 import json
 import sys
 from datetime import datetime, timezone
@@ -374,9 +395,10 @@ foreach ($rules as $key => $rule) {
 
 $mysqli->close();
 ' 2>&1 | redact_text_stream >> "${LOG_FILE}"; then
+    write_template_status "applied" "Bundled compact invoice templates applied or confirmed."
     log_line "[templates] Invoice template default check completed"
-    write_status "templates_applied" "Compact templates applied"
   else
+    write_template_status "error" "Unable to confirm compact template defaults."
     log_line "[templates] Failed to apply invoice template defaults"
   fi
 }
@@ -406,6 +428,7 @@ run_finalize() {
 
   write_status "updating" "Updating .env before container recreate."
   log_line "Finalize request detected."
+  write_template_status "pending" "Compact template defaults pending."
   log_line "Using workspace: <container-workspace>"
   log_line "Using host workspace: <host-workspace>"
   log_line "Using compose file: <compose-file>"
@@ -526,6 +549,10 @@ main_loop() {
     write_status "idle" "Waiting for finalize request."
   fi
 
+  if [ ! -f "${TEMPLATE_STATUS_FILE}" ]; then
+    write_template_status "pending" "Waiting for compact template defaults."
+  fi
+
   log_line "Finalizer started."
 
   while :; do
@@ -543,3 +570,4 @@ main_loop() {
 }
 
 main_loop
+
