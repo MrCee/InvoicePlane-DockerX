@@ -101,8 +101,17 @@ load_project_env
 ###############################################################################
 PUID="$(id -u)"
 PGID="$(id -g)"
+
 MYSQL_UID="${MYSQL_UID:-999}"
 MYSQL_GID="${MYSQL_GID:-999}"
+
+if ! is_integer "${MYSQL_UID}"; then
+  MYSQL_UID=999
+fi
+
+if ! is_integer "${MYSQL_GID}"; then
+  MYSQL_GID=999
+fi
 
 HOST_OS="linux"
 if [ "$(uname)" = "Darwin" ]; then

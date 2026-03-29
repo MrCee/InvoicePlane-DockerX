@@ -42,3 +42,19 @@ invoiceplane_views/**
 *~
 @eaDir
 
+
+# ============================================================
+# Runtime bind-mount data (shape kept, content not tracked)
+# ============================================================
+mariadb/**
+!mariadb/.gitkeep
+
+data/logs/**
+!data/logs/.gitkeep
+
+data/finalize/**
+!data/finalize/.gitkeep
+
+invoiceplane_uploads/**
+!invoiceplane_uploads/.gitkeep
+
