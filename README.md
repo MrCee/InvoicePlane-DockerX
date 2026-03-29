@@ -19,7 +19,7 @@
 
 ## 🧠 What This Project Is
 
-**InvoicePlane-DockerX** is a **rebuild-safe, recovery-aware Docker setup for InvoicePlane**.
+**InvoicePlane-DockerX** is a **rebuild-safe, recovery-aware Docker operating model for InvoicePlane**.
 
 It is designed to behave predictably across:
 
@@ -30,7 +30,20 @@ It is designed to behave predictably across:
 
 This is not just a container that starts.
 
-It is a system designed to **manage state correctly across installs, rebuilds, and recovery**.
+It is a system that:
+
+- keeps application, environment, and runtime state aligned  
+- prevents configuration drift  
+- preserves user data across rebuilds  
+- safely introduces new templates and overrides  
+- supports schema-aware database recovery  
+
+### Result
+
+- predictable behaviour  
+- reproducible environments  
+- safe customization  
+- reliable recovery across versions  
 
 ---
 
@@ -63,7 +76,11 @@ Edit `.env` to suit your system.
 
 This is the **only supported startup method**.
 
-It keeps preparation, validation, and startup behavior consistent across NAS, Linux, and macOS environments.
+It ensures consistent preparation, validation, and startup behaviour across macOS, Linux, and NAS environments.
+
+For startup and day-to-day operator flow, see:
+
+- [`docs/operations.md`](docs/operations.md)
 
 ---
 
@@ -73,6 +90,10 @@ It keeps preparation, validation, and startup behavior consistent across NAS, Li
 - complete the InvoicePlane setup  
 - wait for the finalizer to finish  
 - click **Continue to Login**
+
+For the finalize flow and setup behaviour, see:
+
+- [`docs/finalizer.md`](docs/finalizer.md)
 
 ---
 
@@ -86,17 +107,41 @@ You should now have:
 
 ---
 
+## 🧱 Architecture Overview
+
+This project separates **source**, **runtime**, and **execution** cleanly:
+
+- `docker/templates/` → authoritative template source  
+- `invoiceplane_*` → bind-mounted runtime state  
+- container → execution layer  
+
+At startup:
+
+- missing files are seeded safely  
+- user changes are preserved  
+- managed templates (e.g. `2026*.php`) are enforced  
+- runtime stays aligned with the repository  
+
+### Result
+
+- predictable behaviour  
+- reproducible environments  
+- safe customization  
+- reliable recovery across versions  
+
+This provides a production-grade operational baseline without sacrificing flexibility or control.
+
+---
+
 ## ✨ What This Setup Actually Does
 
 ### 🔁 Operator-first startup
-
-Start the stack with:
 
 ```bash
 ./bin/up.sh
 ```
 
-This ensures:
+Ensures:
 
 - bind mounts are prepared  
 - environment is aligned  
@@ -104,42 +149,41 @@ This ensures:
 - database readiness is handled  
 - application startup is consistent  
 
+For more operator details, see:
+
+- [`docs/operations.md`](docs/operations.md)
+
 ---
 
 ### 🧭 Guided install + finalisation
 
-The setup flow combines:
+Combines:
 
-- the standard InvoicePlane installer  
-- a backend-aware finalizer  
+- standard InvoicePlane installer  
+- backend-aware finalizer  
 
 ![InvoicePlane Finalizer](docs/images/finalizer.png)
 
 The finalizer:
 
 - aligns `.env` with runtime state  
-- ensures setup completion state is correct  
-- generates and verifies encryption values  
+- ensures setup completion is correct  
+- generates encryption values  
 - validates application reachability  
 - exposes backend logs  
-- provides a clear **Continue to Login** path  
+- provides a clean **Continue to Login** path  
 
-As part of finalisation, sensible application defaults are applied.
+Default templates are applied automatically, so the system is usable immediately after setup.
 
-This includes setting the bundled compact invoice templates as the default for new installs, so the system is ready to use without additional configuration.
+More:
 
-Result:
-
-- no setup loops  
-- no login loops  
-- no partial installs  
-- a cleaner install-to-login experience  
+- [`docs/finalizer.md`](docs/finalizer.md)
 
 ---
 
 ### 💾 Persistent storage with bind mounts
 
-Important state lives on the host:
+Key data lives on the host:
 
 - MariaDB data  
 - uploads  
@@ -150,69 +194,50 @@ Important state lives on the host:
 
 This makes:
 
-- rebuilds safer  
-- debugging easier  
+- rebuilds safe  
+- debugging easy  
 - customizations visible  
 - recovery predictable  
 
 ---
 
-### 📄 Document presentation and PDF customization
+### 📄 Document presentation and template system
 
-This project provides a **safe, non-destructive way to customize document output** in InvoicePlane.
+Provides a **safe, non-destructive customization layer** for invoices and quotes.
 
-It includes:
+Includes:
 
-- custom invoice and quote templates (including the 2026 compact layouts)  
-- improved PDF footer handling  
+- 2026 compact invoice and quote templates  
+- aligned PDF + web presentation  
+- improved footer handling  
 
-New installs default to the compact templates, providing a cleaner and more consistent document layout.  
-Original InvoicePlane templates remain available at all times.
+#### Behaviour
 
-#### Behavior
-
-- templates are added automatically on first run  
+- templates are seeded automatically  
 - existing files are never overwritten  
 - user changes are preserved  
-- deleted files are restored from the image  
-- new templates can be introduced safely over time  
+- deleted files are restored  
+- managed templates (e.g. `2026*.php`) are enforced  
 
-#### Custom templates
-
-Custom templates are:
-
-- baked into the image under `/opt/invoiceplane-seeds/views`  
-- copied into the application only if missing  
-
-Structure:
+#### Structure
 
 ```text
 docker/templates/views/
   invoice_templates/
     pdf/
     public/
+    html/
   quote_templates/
     pdf/
     public/
+    html/
 ```
-
-Once seeded, templates appear inside InvoicePlane wherever invoice or quote PDF templates are selected.
-
-#### PDF footer improvements
-
-Includes a helper override for more consistent PDF output:
-
-- split footer layout  
-- page numbers on all pages  
-- document reference on each page  
-- stable multi-page rendering  
 
 #### Result
 
-- cleaner, more readable invoices and quotes  
+- consistent document design across PDF and web  
 - safe customization without losing defaults  
-- no manual setup steps  
-- upgrade-safe presentation changes  
+- upgrade-safe template evolution  
 
 More:
 
@@ -224,18 +249,18 @@ More:
 
 Database imports are **reconcile-only**.
 
-Instead of importing SQL dumps directly into the live database, data is:
+Instead of direct imports:
 
-- loaded into a temporary database  
-- compared against a fresh installer-created schema  
+- data is loaded into a temporary database  
+- compared against a clean schema  
 - merged using controlled strategies  
 
 This approach:
 
-- works across InvoicePlane versions  
+- works across versions  
 - tolerates schema differences  
-- avoids fragile direct imports  
-- produces safer recovery results  
+- avoids destructive imports  
+- produces safer recovery outcomes  
 
 Run:
 
@@ -246,7 +271,7 @@ Run:
 More:
 
 - [`docs/recovery.md`](docs/recovery.md)  
-- [`docs/table-strategy-matrix.md`](docs/table-strategy-matrix.md)  
+- [`docs/table-strategy-matrix.md`](docs/table-strategy-matrix.md)
 
 ---
 
@@ -254,21 +279,19 @@ More:
 
 ### 🔍 No hidden state
 
-Everything important should be visible, inspectable, and traceable.
+Everything important is visible and inspectable.
 
 ---
 
 ### 🔁 Host and container must agree
 
-If `.env`, runtime, and application state differ, the system is broken.
-
-The finalizer exists to keep them aligned.
+`.env`, runtime, and application state must stay aligned.
 
 ---
 
 ### 🛠️ No blind operations
 
-- no direct database imports  
+- no direct DB imports  
 - no silent overwrites  
 - no unsafe assumptions  
 
@@ -276,17 +299,17 @@ The finalizer exists to keep them aligned.
 
 ### 🧬 Schema-aware recovery
 
-Data should be adapted into the correct schema, not forced into it.
+Data is adapted into the correct schema, not forced into it.
 
 ---
 
 ### 🔐 Explicit overrides
 
-Overrides should be:
+All overrides are:
 
-- tracked in Git  
-- easy to audit  
+- tracked  
 - intentional  
+- reviewable  
 
 ---
 
@@ -346,32 +369,53 @@ Everything should be:
 ./bin/dev-reset-install.sh
 ```
 
-This resets:
+Resets:
 
 - MariaDB  
 - install state  
 - encryption config  
 
-⚠️ Read first:
+Read first:
 
 - [`docs/dev-reset-install.md`](docs/dev-reset-install.md)
 
 ---
 
-## 🎯 Who This Is For
+## 🌏 Regional language overrides
 
-- developers who want predictable Docker behavior  
-- operators who care about recovery and data safety  
-- people migrating older InvoicePlane installs  
-- anyone tired of setup loops and broken imports  
+Customize terminology via:
+
+```text
+invoiceplane_language/custom_lang.php
+```
+
+Example (Australia):
+
+- ABN  
+- GST  
+
+See example implementation:
+
+- [`docs/language-overrides.md`](docs/language-overrides.md)
 
 ---
 
-## 🌏 Regional language overrides
+## 🎯 Who This Is For
 
-Regional terminology can be customized through `invoiceplane_language/custom_lang.php`.
+- developers who want predictable Docker behaviour  
+- operators who care about data safety and recovery  
+- people migrating older InvoicePlane installs  
+- anyone tired of broken imports and setup loops  
 
-See [`docs/language-overrides.md`](docs/language-overrides.md) for an Australian example using `ABN` and `GST`.
+---
+
+## 🧭 Where to Go Next
+
+- first install → run `./bin/up.sh`  
+- importing old data → see [`docs/recovery.md`](docs/recovery.md)  
+- customizing templates → see [`docs/pdf-footer-override.md`](docs/pdf-footer-override.md)  
+- regional language changes → see [`docs/language-overrides.md`](docs/language-overrides.md)  
+- destructive reset → see [`docs/dev-reset-install.md`](docs/dev-reset-install.md)  
 
 ---
 
@@ -390,3 +434,4 @@ This is:
 ## ⭐ If This Helped You
 
 Star the repo — it saves real operator time.
+
