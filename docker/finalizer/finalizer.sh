@@ -198,8 +198,6 @@ verify_container_env() {
   docker compose -f "${COMPOSE_FILE}" --project-directory "${COMPOSE_PROJECT_DIR}" exec -T "${COMPOSE_SERVICE}" sh -lc "printenv ${check_key}" 2>/dev/null | tail -n 1
 }
 
-
-
 mask_env_assignment_line() {
   line="${1:-}"
   case "${line}" in
@@ -229,6 +227,119 @@ verify_ipconfig_flags() {
       true
     fi
   ' 2>/dev/null
+}
+
+apply_default_templates() {
+  log_line "[templates] Checking InvoicePlane invoice template defaults"
+
+  if docker compose -f "${COMPOSE_FILE}" --project-directory "${COMPOSE_PROJECT_DIR}" exec -T "${COMPOSE_SERVICE}" php -r '
+$host = getenv("MYSQL_HOST");
+$user = getenv("MYSQL_USER");
+$pass = getenv("MYSQL_PASSWORD");
+$name = getenv("MYSQL_DATABASE");
+$port = getenv("MYSQL_PORT");
+
+$mysqli = @new mysqli($host, $user, $pass, $name, (int)$port);
+if ($mysqli->connect_errno) {
+    fwrite(STDERR, "[templates] DB connection failed: " . $mysqli->connect_error . PHP_EOL);
+    exit(1);
+}
+
+if (!$mysqli->set_charset("utf8mb4")) {
+    fwrite(STDERR, "[templates] Failed to set utf8mb4 charset" . PHP_EOL);
+}
+
+function get_setting_value(mysqli $db, string $key): ?string {
+    $stmt = $db->prepare("SELECT setting_value FROM ip_settings WHERE setting_key = ? LIMIT 1");
+    if (!$stmt) {
+        fwrite(STDERR, "[templates] Prepare failed for SELECT " . $key . ": " . $db->error . PHP_EOL);
+        exit(1);
+    }
+
+    $stmt->bind_param("s", $key);
+    if (!$stmt->execute()) {
+        fwrite(STDERR, "[templates] Execute failed for SELECT " . $key . ": " . $stmt->error . PHP_EOL);
+        exit(1);
+    }
+
+    $result = $stmt->get_result();
+    if (!$result) {
+        fwrite(STDERR, "[templates] Result fetch failed for SELECT " . $key . ": " . $stmt->error . PHP_EOL);
+        exit(1);
+    }
+
+    $row = $result->fetch_assoc();
+    $stmt->close();
+
+    if (!$row || !array_key_exists("setting_value", $row)) {
+        return null;
+    }
+
+    return (string)$row["setting_value"];
+}
+
+function upsert_setting_value(mysqli $db, string $key, string $value): void {
+    $stmt = $db->prepare("
+        INSERT INTO ip_settings (setting_key, setting_value)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+    ");
+    if (!$stmt) {
+        fwrite(STDERR, "[templates] Prepare failed for UPSERT " . $key . ": " . $db->error . PHP_EOL);
+        exit(1);
+    }
+
+    $stmt->bind_param("ss", $key, $value);
+    if (!$stmt->execute()) {
+        fwrite(STDERR, "[templates] Execute failed for UPSERT " . $key . ": " . $stmt->error . PHP_EOL);
+        exit(1);
+    }
+
+    $stmt->close();
+}
+
+$rules = [
+    "pdf_invoice_template" => [
+        "desired" => "2026_compact_InvoicePlane",
+        "allowed" => ["", "InvoicePlane"],
+    ],
+    "pdf_invoice_template_paid" => [
+        "desired" => "2026_compact_paid",
+        "allowed" => ["", "InvoicePlane - paid"],
+    ],
+    "pdf_invoice_template_overdue" => [
+        "desired" => "2026_compact_overdue",
+        "allowed" => ["", "InvoicePlane - overdue"],
+    ],
+];
+
+foreach ($rules as $key => $rule) {
+    $current = get_setting_value($mysqli, $key);
+    $currentTrimmed = $current === null ? null : trim($current);
+    $desired = $rule["desired"];
+    $allowed = $rule["allowed"];
+
+    if ($currentTrimmed === null || in_array($currentTrimmed, $allowed, true)) {
+        upsert_setting_value($mysqli, $key, $desired);
+
+        if ($currentTrimmed === null) {
+            echo "[templates] SET " . $key . " => " . $desired . " (key was missing)" . PHP_EOL;
+        } elseif ($currentTrimmed === "") {
+            echo "[templates] SET " . $key . " => " . $desired . " (was blank)" . PHP_EOL;
+        } else {
+            echo "[templates] SET " . $key . " => " . $desired . " (was " . $currentTrimmed . ")" . PHP_EOL;
+        }
+    } else {
+        echo "[templates] SKIP " . $key . " (already " . $currentTrimmed . ")" . PHP_EOL;
+    }
+}
+
+$mysqli->close();
+' >> "${LOG_FILE}" 2>&1; then
+    log_line "[templates] Invoice template default check completed"
+  else
+    log_line "[templates] Failed to apply invoice template defaults"
+  fi
 }
 
 run_finalize() {
@@ -364,6 +475,8 @@ run_finalize() {
     esac
   done
 
+  apply_default_templates
+
   log_line "[complete] Finalizer finished successfully"
   write_status "complete" "InvoicePlane finalizer completed successfully."
   return 0
@@ -391,3 +504,5 @@ main_loop() {
 }
 
 main_loop
+
+
