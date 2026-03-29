@@ -24,9 +24,47 @@ timestamp_utc() {
   date -u +"%Y-%m-%dT%H:%M:%SZ"
 }
 
+redact_text_stream() {
+  HOST_WORKSPACE="${HOST_WORKSPACE:-}" \
+  COMPOSE_PROJECT_DIR="${COMPOSE_PROJECT_DIR:-}" \
+  COMPOSE_FILE="${COMPOSE_FILE:-}" \
+  WORKSPACE="${WORKSPACE:-}" \
+  ENV_FILE="${ENV_FILE:-}" \
+  python3 -c '
+import os
+import re
+import sys
+
+text = sys.stdin.read()
+
+literal_replacements = [
+    (os.environ.get("HOST_WORKSPACE", ""), "<host-workspace>"),
+    (os.environ.get("COMPOSE_PROJECT_DIR", ""), "<compose-project-dir>"),
+    (os.environ.get("COMPOSE_FILE", ""), "<compose-file>"),
+    (os.environ.get("WORKSPACE", ""), "<container-workspace>"),
+    (os.environ.get("ENV_FILE", ""), "<env-file>"),
+]
+
+for src, dst in literal_replacements:
+    if src:
+        text = text.replace(src, dst)
+
+patterns = [
+    (r"/Users/[^/\s]+", "/Users/<user>"),
+    (r"/home/[^/\s]+", "/home/<user>"),
+    (r"/var/services/homes/[^/\s]+", "/var/services/homes/<user>"),
+]
+
+for pattern, repl in patterns:
+    text = re.sub(pattern, repl, text)
+
+sys.stdout.write(text)
+'
+}
+
 log_line() {
   line="${1:-}"
-  printf '[%s] %s\n' "$(timestamp_utc)" "${line}" >> "${LOG_FILE}"
+  printf '[%s] %s\n' "$(timestamp_utc)" "${line}" | redact_text_stream >> "${LOG_FILE}"
 }
 
 write_status() {
@@ -70,13 +108,13 @@ if [ -n "${HOST_WORKSPACE}" ]; then
   COMPOSE_FILE="${HOST_WORKSPACE}/docker-compose.yml"
   ENV_FILE="${COMPOSE_PROJECT_DIR}/.env"
 else
-  log_line "[warn] Could not resolve host workspace; falling back to ${COMPOSE_PROJECT_DIR}"
+  log_line "[warn] Could not resolve host workspace; falling back to configured compose project directory"
 fi
 
 append_normalized_file() {
   src="${1:-}"
   [ -f "${src}" ] || return 0
-  tr '\r' '\n' < "${src}" >> "${LOG_FILE}"
+  tr '\r' '\n' < "${src}" | redact_text_stream >> "${LOG_FILE}"
 }
 
 read_env_value() {
@@ -129,17 +167,17 @@ ensure_encryption_values() {
   if [ -z "${cipher}" ]; then
     cipher="AES-256"
     upsert_env_value "ENCRYPTION_CIPHER" "${cipher}" "${ENV_FILE}"
-    log_line "[encryption] Set ENCRYPTION_CIPHER=${cipher} in ${ENV_FILE}"
+    log_line "[encryption] Set ENCRYPTION_CIPHER=${cipher} in <env-file>"
   else
-    log_line "[encryption] Preserving existing ENCRYPTION_CIPHER in ${ENV_FILE}"
+    log_line "[encryption] Preserving existing ENCRYPTION_CIPHER in <env-file>"
   fi
 
   if [ -z "${key}" ]; then
     key="$(generate_encryption_key)"
     upsert_env_value "ENCRYPTION_KEY" "${key}" "${ENV_FILE}"
-    log_line "[encryption] Generated ENCRYPTION_KEY in ${ENV_FILE}"
+    log_line "[encryption] Generated ENCRYPTION_KEY in <env-file>"
   else
-    log_line "[encryption] Preserving existing ENCRYPTION_KEY in ${ENV_FILE}"
+    log_line "[encryption] Preserving existing ENCRYPTION_KEY in <env-file>"
   fi
 }
 
@@ -335,7 +373,7 @@ foreach ($rules as $key => $rule) {
 }
 
 $mysqli->close();
-' >> "${LOG_FILE}" 2>&1; then
+' 2>&1 | redact_text_stream >> "${LOG_FILE}"; then
     log_line "[templates] Invoice template default check completed"
   else
     log_line "[templates] Failed to apply invoice template defaults"
@@ -365,16 +403,16 @@ run_finalize() {
 
   : > "${TMP_COMPOSE_OUTPUT}"
 
-  write_status "updating" "Updating ${ENV_FILE} before container recreate."
+  write_status "updating" "Updating .env before container recreate."
   log_line "Finalize request detected."
-  log_line "Using workspace: ${WORKSPACE}"
-  log_line "Using host workspace: ${COMPOSE_PROJECT_DIR}"
-  log_line "Using compose file: ${COMPOSE_FILE}"
+  log_line "Using workspace: <container-workspace>"
+  log_line "Using host workspace: <host-workspace>"
+  log_line "Using compose file: <compose-file>"
   log_line "Using compose service: ${COMPOSE_SERVICE}"
 
   if [ ! -f "${ENV_FILE}" ]; then
-    write_status "error" "Missing ${ENV_FILE}"
-    log_line "[error] Missing ${ENV_FILE}"
+    write_status "error" "Missing .env"
+    log_line "[error] Missing <env-file>"
     return 1
   fi
 
@@ -382,7 +420,7 @@ run_finalize() {
   upsert_env_value "SETUP_COMPLETED" "true" "${ENV_FILE}"
   ensure_encryption_values
 
-  log_line "Updated ${ENV_FILE}."
+  log_line "Updated <env-file>."
   log_line "Current .env flags:"
   {
     grep -E '^(DISABLE_SETUP|SETUP_COMPLETED|ENCRYPTION_CIPHER|ENCRYPTION_KEY)=' "${ENV_FILE}" || true
@@ -391,7 +429,7 @@ run_finalize() {
     log_line "${masked}"
   done
 
-  write_status "recreating" "Recreating ${COMPOSE_SERVICE} so Compose picks up ${ENV_FILE}."
+  write_status "recreating" "Recreating ${COMPOSE_SERVICE} so Compose picks up .env."
   log_line "[recreate] Starting docker compose up -d --force-recreate ${COMPOSE_SERVICE}"
 
   if env -u DISABLE_SETUP -u SETUP_COMPLETED -u ENCRYPTION_CIPHER -u ENCRYPTION_KEY \
@@ -504,5 +542,3 @@ main_loop() {
 }
 
 main_loop
-
-

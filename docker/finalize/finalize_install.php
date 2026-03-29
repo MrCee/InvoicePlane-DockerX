@@ -317,7 +317,7 @@ function h(string $value): string
           <div class="terminal-toolbar">
             <div>
               <div class="terminal-title">Finalizer log</div>
-              <div class="terminal-subtitle">Full snapshot replaces the terminal contents on every poll. Auto-scroll only happens when you are already near the bottom.</div>
+              <div class="terminal-subtitle">Polling terminal logs now...</div>
             </div>
             <div class="helper" id="logMeta">Waiting for log data…</div>
           </div>
@@ -464,7 +464,7 @@ function h(string $value): string
         continueButton.disabled = !allowContinue;
 
         if (lastKnownState === 'complete') {
-          actionHelper.textContent = 'Finalizer is complete. You can continue after reviewing and scrolling the log.';
+          actionHelper.textContent = 'Finalizer is complete.';
         } else if (lastKnownState === 'error' && appReachable) {
           actionHelper.textContent = 'The finalizer errored, but the app appears reachable. Manual continue is available.';
         } else if (appReachable) {
