@@ -358,6 +358,9 @@ function upsert_setting_value(mysqli $db, string $key, string $value): void {
 }
 
 $rules = [
+    // ================================
+    // Invoice templates
+    // ================================
     "pdf_invoice_template" => [
         "desired" => "2026_compact_InvoicePlane",
         "allowed" => ["", "InvoicePlane"],
@@ -369,6 +372,14 @@ $rules = [
     "pdf_invoice_template_overdue" => [
         "desired" => "2026_compact_overdue",
         "allowed" => ["", "InvoicePlane - overdue"],
+    ],
+
+    // ================================
+    // Quote templates (NEW)
+    // ================================
+    "pdf_quote_template" => [
+        "desired" => "2026_compact_QuotePlane",
+        "allowed" => ["", "InvoicePlane"],
     ],
 ];
 
