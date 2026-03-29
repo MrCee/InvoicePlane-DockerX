@@ -567,6 +567,35 @@ prepare_mariadb_dir
 echo
 
 ###############################################################################
+# Sync CSS Overrides (non-destructive backfill)
+###############################################################################
+echo "========================================"
+echo "Syncing CSS overrides"
+echo "========================================"
+
+CSS_SRC="${REPO_ROOT}/docker/overrides/invoiceplane_css"
+CSS_DST="${REPO_ROOT}/invoiceplane_css"
+
+if [ -d "${CSS_SRC}" ]; then
+  find "${CSS_SRC}" -type f | while IFS= read -r src; do
+    rel="${src#${CSS_SRC}/}"
+    dst="${CSS_DST}/${rel}"
+
+    if [ ! -e "${dst}" ]; then
+      mkdir -p "$(dirname "${dst}")"
+      cp -p "${src}" "${dst}"
+      echo "➕ CSS added: ${rel}"
+    else
+      echo "✔ CSS exists: ${rel}"
+    fi
+  done
+else
+  echo "ℹ️ No CSS override source found at ${CSS_SRC}"
+fi
+
+echo
+
+###############################################################################
 # Bootstrap Required Direct File Bind Mounts
 ###############################################################################
 echo "========================================"
