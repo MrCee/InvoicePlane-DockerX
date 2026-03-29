@@ -171,6 +171,12 @@ This makes:
 - debugging easier  
 - recovery predictable  
 
+Bind-mounted override paths are seeded from the InvoicePlane defaults only when the target directory is empty.
+
+This means first-run environments can be populated automatically, while existing host-side customizations are left in place.
+
+In normal operation, custom templates, language overrides, and other host-managed files are not blindly overwritten on startup.
+
 ---
 
 ### 🛡️ Recovery-first database tooling
@@ -294,40 +300,62 @@ You should always know:
 
 ## ⚡ Quick Start
 
-### 1. Prepare your environment
+### 1. Get the project
+
+```bash
+git clone https://github.com/MrCee/InvoicePlane-DockerX.git
+cd InvoicePlane-DockerX
+```
+
+---
+
+### 2. Prepare your environment
 
 ```bash
 cp .env.example .env
 ```
 
-Adjust values as needed.
+Edit `.env` to suit your system.
 
 ---
 
-### 2. Start the stack (correct way)
+### 3. Start the stack (supported path)
 
 ```bash
 ./bin/up.sh
 ```
 
-This is the **supported startup path**.
+This is the **only supported startup method**.  
+Do not start the stack manually with `docker compose up`.
 
 ---
 
-### 3. Complete setup
+### 4. Complete setup
 
-- run installer  
-- allow finalizer to complete  
-- click **Continue to Login**  
+- open the installer in your browser  
+- complete the InvoicePlane setup  
+- wait for the finalizer to finish  
+- click **Continue to Login**
 
 ---
 
-### 4. Use docs when needed
+### 5. Use docs when needed
 
-- [`docs/setup.md`](docs/setup.md)  
-- [`docs/recovery.md`](docs/recovery.md)  
-- [`docs/dev-reset-install.md`](docs/dev-reset-install.md)  
-- [`docs/pdf-footer-override.md`](docs/pdf-footer-override.md)
+- [`docs/setup.md`](docs/setup.md) — install and startup flow  
+- [`docs/operations.md`](docs/operations.md) — runtime tasks (including password reset)  
+- [`docs/recovery.md`](docs/recovery.md) — database import and recovery  
+- [`docs/dev-reset-install.md`](docs/dev-reset-install.md) — destructive reset  
+- [`docs/pdf-footer-override.md`](docs/pdf-footer-override.md) — PDF behavior  
+
+---
+
+### 6. Done
+
+You should now have a working system with:
+
+- a completed install  
+- synchronized `.env` and runtime state  
+- no setup or login loops  
 
 ---
 

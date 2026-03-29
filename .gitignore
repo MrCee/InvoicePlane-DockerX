@@ -1,43 +1,26 @@
-# ============================================================
 # Secrets / local environment
-# ============================================================
 .env
 .env.*
 !.env.example
 
-# ============================================================
 # Backups / recovery / import work
 .backup/
 .invoiceplane-db-import/
-# ============================================================
 .backup/
 backup-live-before-import-*.sql
 backup-*.sql
 
-# ============================================================
 # Persistent local data
 # Never commit. Never treat as repo-owned structure.
-# ============================================================
 mariadb/
 invoiceplane_uploads/
 data/
 
-# ============================================================
 # Temp / logs / caches
-# ============================================================
 *.log
 tmp/
 cache/
 
-# ============================================================
-# macOS / editor cruft
-# ============================================================
-.DS_Store
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
 
 
 # Runtime-seeded bind-mount content (not tracked)
@@ -47,3 +30,15 @@ invoiceplane_language/**
 !invoiceplane_language/.gitkeep
 invoiceplane_views/**
 !invoiceplane_views/.gitkeep
+
+# ============================================================
+# macOS / editor / Synology cruft
+# ============================================================
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+@eaDir
+
