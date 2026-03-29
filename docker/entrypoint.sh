@@ -32,15 +32,20 @@ ensure_dir() {
 }
 
 dir_empty() {
-  if [ ! -d "$1" ]; then
-    return 0
+  dir_path="$1"
+
+  [ -d "${dir_path}" ] || return 0
+
+  if find "${dir_path}" -mindepth 1 \
+    ! -name '.gitkeep' \
+    ! -name '.DS_Store' \
+    ! -name '@eaDir' \
+    -print -quit 2>/dev/null | grep -q .
+  then
+    return 1
   fi
 
-  if [ -z "$(find "$1" -mindepth 1 ! -name '.gitkeep' -print -quit 2>/dev/null)" ]; then
-    return 0
-  fi
-
-  return 1
+  return 0
 }
 
 copy_dir_if_empty() {
