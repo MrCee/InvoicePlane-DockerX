@@ -101,6 +101,30 @@ seed_custom_view_files_if_missing() {
   done
 }
 
+sync_managed_2026_view_files() {
+  source_root="${CUSTOM_VIEWS_SEED_ROOT}"
+  target_root="${VIEWS_DIR}"
+
+  if [ ! -d "${source_root}" ]; then
+    echo "No custom view seed directory present for managed 2026 sync: ${source_root}"
+    return 0
+  fi
+
+  ensure_dir "${target_root}"
+
+  echo "Syncing managed 2026 view files with overwrite: ${target_root}"
+
+  find "${source_root}" -type f -name '2026*.php' | while IFS= read -r source_file_path; do
+    relative_path="${source_file_path#"${source_root}/"}"
+    target_file_path="${target_root}/${relative_path}"
+    target_dir_path="$(dirname "${target_file_path}")"
+
+    ensure_dir "${target_dir_path}"
+    echo "Updating managed 2026 template: ${target_file_path}"
+    cp -f "${source_file_path}" "${target_file_path}"
+  done
+}
+
 sync_language_dir_preserve_custom() {
   lang_source_dir="${SEED_DIR}/application/language/${IP_LANGUAGE}"
   lang_target_dir="${APP_DIR}/application/language/${IP_LANGUAGE}"
@@ -276,6 +300,7 @@ copy_dir_if_missing_pattern "${SEED_DIR}/assets/core/css" "${CSS_DIR}" '*.css' '
 copy_dir_if_missing_pattern "${SEED_DIR}/application/views" "${VIEWS_DIR}" '*.php' 'PHP view'
 sync_language_dir_preserve_custom
 seed_custom_view_files_if_missing
+sync_managed_2026_view_files
 
 ensure_runtime_dirs
 install_custom_setup_complete_view
