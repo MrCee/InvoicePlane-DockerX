@@ -367,6 +367,14 @@ This resets:
 
 ---
 
+## 🌏 Regional language overrides
+
+Regional terminology can be customized through `invoiceplane_language/custom_lang.php`.
+
+See [`docs/language-overrides.md`](docs/language-overrides.md) for an Australian example using `ABN` and `GST`.
+
+---
+
 ## 🧩 Final Thought
 
 This is not:
