@@ -1,6 +1,14 @@
 # InvoicePlane DB Import
 
+[← Back to README](../README.md)
+
 `bin/invoiceplane-db-import.sh` is a staged database import, recovery, and reconciliation tool for InvoicePlane.
+
+## Related docs
+
+- [Recovery and Database Import](./recovery.md)
+- [Table Strategy Matrix](./table-strategy-matrix.md)
+- [Dev Reset Install](./dev-reset-install.md)
 
 ---
 

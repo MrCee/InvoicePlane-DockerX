@@ -28,15 +28,13 @@ It is designed to behave predictably across:
 - migrations  
 - recovery scenarios  
 
-This is not just a container that starts.
-
-It is a system that:
+This is not just a container that starts. It is a system that:
 
 - keeps application, environment, and runtime state aligned  
-- prevents configuration drift  
+- prevents configuration misalignment  
 - preserves user data across rebuilds  
 - safely introduces new templates and overrides  
-- supports schema-aware database recovery  
+- supports schema-aware database import and recovery  
 
 ### Result
 
@@ -65,6 +63,10 @@ cp .env.example .env
 ```
 
 Edit `.env` to suit your system.
+
+For the supported startup path and setup flow, see:
+
+- [`docs/setup.md`](docs/setup.md)
 
 ---
 
@@ -121,13 +123,6 @@ At startup:
 - user changes are preserved  
 - managed templates (e.g. `2026*.php`) are enforced  
 - runtime stays aligned with the repository  
-
-### Result
-
-- predictable behaviour  
-- reproducible environments  
-- safe customization  
-- reliable recovery across versions  
 
 This provides a production-grade operational baseline without sacrificing flexibility or control.
 
@@ -271,6 +266,7 @@ Run:
 More:
 
 - [`docs/recovery.md`](docs/recovery.md)  
+- [`docs/invoiceplane-db-import.md`](docs/invoiceplane-db-import.md)  
 - [`docs/table-strategy-matrix.md`](docs/table-strategy-matrix.md)
 
 ---
@@ -301,6 +297,12 @@ Everything important is visible and inspectable.
 
 Data is adapted into the correct schema, not forced into it.
 
+See:
+
+- [`docs/recovery.md`](docs/recovery.md)
+- [`docs/invoiceplane-db-import.md`](docs/invoiceplane-db-import.md)
+- [`docs/table-strategy-matrix.md`](docs/table-strategy-matrix.md)
+
 ---
 
 ### 🔐 Explicit overrides
@@ -310,6 +312,11 @@ All overrides are:
 - tracked  
 - intentional  
 - reviewable  
+
+See:
+
+- [`docs/pdf-footer-override.md`](docs/pdf-footer-override.md)
+- [`docs/language-overrides.md`](docs/language-overrides.md)
 
 ---
 
@@ -412,7 +419,11 @@ See example implementation:
 ## 🧭 Where to Go Next
 
 - first install → run `./bin/up.sh`  
+- setup flow → see [`docs/setup.md`](docs/setup.md)  
+- finalizer behaviour → see [`docs/finalizer.md`](docs/finalizer.md)  
 - importing old data → see [`docs/recovery.md`](docs/recovery.md)  
+- import strategy detail → see [`docs/invoiceplane-db-import.md`](docs/invoiceplane-db-import.md)  
+- table handling rules → see [`docs/table-strategy-matrix.md`](docs/table-strategy-matrix.md)  
 - customizing templates → see [`docs/pdf-footer-override.md`](docs/pdf-footer-override.md)  
 - regional language changes → see [`docs/language-overrides.md`](docs/language-overrides.md)  
 - destructive reset → see [`docs/dev-reset-install.md`](docs/dev-reset-install.md)  
@@ -434,4 +445,3 @@ This is:
 ## ⭐ If This Helped You
 
 Star the repo — it saves real operator time.
-

@@ -1,6 +1,13 @@
 # Table Strategy Matrix
 
+[← Back to README](../README.md)
+
 This file describes how major InvoicePlane tables should be treated by the recovery/import tool.
+
+## Related docs
+
+- [Recovery and Database Import](./recovery.md)
+- [InvoicePlane DB Import](./invoiceplane-db-import.md)
 
 ## Core recovery cluster
 

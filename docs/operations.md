@@ -65,3 +65,10 @@ ADMIN_BOOTSTRAP=true TEMP_PASSWORD=NewPass123! ./bin/reset-password.sh
 - requires docker compose
 - safe to run multiple times
 - does not expose secrets in logs
+
+## Related docs
+
+- [Setup and Startup](./setup.md)
+- [Finalizer](./finalizer.md)
+- [Recovery and Database Import](./recovery.md)
+- [Dev Reset Install](./dev-reset-install.md)

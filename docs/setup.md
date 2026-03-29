@@ -53,3 +53,10 @@ Use the repository in this order:
 2. browser installer / finalizer flow
 3. docs-guided recovery tools when needed
 4. explicit reset or recovery scripts only when you mean it
+
+## Related docs
+
+- [Operations](./operations.md)
+- [Finalizer](./finalizer.md)
+- [Recovery and Database Import](./recovery.md)
+- [Dev Reset Install](./dev-reset-install.md)

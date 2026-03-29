@@ -1,5 +1,6 @@
 # Recovery and Database Import
 
+[← Back to README](../README.md)
 
 ## Overview
 
@@ -20,9 +21,15 @@ Instead:
 
 ## Reconcile Import Model
 
-# InvoicePlane DB Import
+This repository treats recovery as a staged operator workflow, not a one-shot SQL import.
 
-`bin/invoiceplane-db-import.sh` is a staged database import, recovery, and reconciliation tool for InvoicePlane.
+Use this page as the recovery guide, then follow the tool-specific docs when you need implementation detail.
+
+## Related recovery docs
+
+- [InvoicePlane DB Import](./invoiceplane-db-import.md)
+- [Table Strategy Matrix](./table-strategy-matrix.md)
+- [Dev Reset Install](./dev-reset-install.md)
 
 ---
 

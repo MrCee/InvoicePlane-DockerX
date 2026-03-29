@@ -1,5 +1,7 @@
 # Language overrides
 
+[← Back to README](../README.md)
+
 InvoicePlane-DockerX supports language string overrides through:
 
 ```php
@@ -33,3 +35,8 @@ $lang = [
 - Add each override on its own line.
 - Existing upstream language files remain untouched.
 - `custom_lang.php` is the intended place for regional wording changes.
+
+## Related docs
+
+- [Setup and Startup](./setup.md)
+- [PDF Footer Override](./pdf-footer-override.md)
