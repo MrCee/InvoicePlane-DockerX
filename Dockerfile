@@ -73,6 +73,8 @@ COPY docker/finalize/finalize_install.php /var/www/html/finalize_install.php
 COPY docker/finalize/finalize_status.php /var/www/html/finalize_status.php
 COPY docker/finalize/custom-complete.php /var/www/html/custom-complete.php
 
+COPY docker/templates/views /opt/invoiceplane-seeds/views
+
 RUN mkdir -p \
     /var/www/html/uploads \
     /var/www/html/uploads/archive \
@@ -82,7 +84,10 @@ RUN mkdir -p \
     /var/www/html/application/logs \
     /var/www/html/application/config \
     /var/www/html_default \
+    /opt/invoiceplane-seeds/views \
   && cp -a /var/www/html/. /var/www/html_default/ \
+  && find /opt/invoiceplane-seeds -type d -exec chmod 755 {} \; \
+  && find /opt/invoiceplane-seeds -type f -exec chmod 644 {} \; \
   && chown -R www-data:www-data /var/www/html /var/www/html_default
 
 RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf \
@@ -112,3 +117,4 @@ RUN chmod +x /usr/local/bin/validate-runtime.sh
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint-ip.sh"]
 CMD ["apache2-foreground"]
+

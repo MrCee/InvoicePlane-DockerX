@@ -19,6 +19,8 @@ CSS_DIR="${APP_DIR}/assets/core/css"
 VIEWS_DIR="${APP_DIR}/application/views"
 LANG_DIR="${APP_DIR}/application/language/${IP_LANGUAGE}"
 
+CUSTOM_VIEWS_SEED_ROOT="/opt/invoiceplane-seeds/views"
+
 SETUP_COMPLETE_VIEW="${APP_DIR}/application/modules/setup/views/complete.php"
 CUSTOM_COMPLETE_VIEW="${APP_DIR}/custom-complete.php"
 
@@ -31,26 +33,20 @@ ensure_dir() {
   mkdir -p "$1"
 }
 
-dir_empty() {
+dir_has_files_matching() {
   dir_path="$1"
+  name_pattern="$2"
 
-  [ -d "${dir_path}" ] || return 0
+  [ -d "${dir_path}" ] || return 1
 
-  if find "${dir_path}" -mindepth 1 \
-    ! -name '.gitkeep' \
-    ! -name '.DS_Store' \
-    ! -name '@eaDir' \
-    -print -quit 2>/dev/null | grep -q .
-  then
-    return 1
-  fi
-
-  return 0
+  find "${dir_path}" -type f -name "${name_pattern}" -print -quit 2>/dev/null | grep -q .
 }
 
-copy_dir_if_empty() {
+copy_dir_if_missing_pattern() {
   source_dir_path="$1"
   target_dir_path="$2"
+  name_pattern="$3"
+  label="$4"
 
   if [ ! -d "${source_dir_path}" ]; then
     echo "WARN: Seed source missing: ${source_dir_path}"
@@ -59,11 +55,11 @@ copy_dir_if_empty() {
 
   ensure_dir "${target_dir_path}"
 
-  if dir_empty "${target_dir_path}"; then
-    echo "Seeding empty directory: ${target_dir_path} <- ${source_dir_path}"
-    cp -a "${source_dir_path}/." "${target_dir_path}/"
+  if dir_has_files_matching "${target_dir_path}" "${name_pattern}"; then
+    echo "Directory already populated with ${label}: ${target_dir_path}"
   else
-    echo "Directory already populated: ${target_dir_path}"
+    echo "Seeding ${label} directory: ${target_dir_path} <- ${source_dir_path}"
+    cp -a "${source_dir_path}/." "${target_dir_path}/"
   fi
 }
 
@@ -82,6 +78,29 @@ copy_file_if_missing() {
   fi
 }
 
+seed_custom_view_files_if_missing() {
+  source_root="${CUSTOM_VIEWS_SEED_ROOT}"
+  target_root="${VIEWS_DIR}"
+
+  if [ ! -d "${source_root}" ]; then
+    echo "No custom view seed directory present: ${source_root}"
+    return 0
+  fi
+
+  ensure_dir "${target_root}"
+
+  echo "Seeding custom view files without overwriting existing files: ${target_root}"
+
+  find "${source_root}" -type f | while IFS= read -r source_file_path; do
+    relative_path="${source_file_path#"${source_root}/"}"
+    target_file_path="${target_root}/${relative_path}"
+    target_dir_path="$(dirname "${target_file_path}")"
+
+    ensure_dir "${target_dir_path}"
+    copy_file_if_missing "${source_file_path}" "${target_file_path}"
+  done
+}
+
 sync_language_dir_preserve_custom() {
   lang_source_dir="${SEED_DIR}/application/language/${IP_LANGUAGE}"
   lang_target_dir="${APP_DIR}/application/language/${IP_LANGUAGE}"
@@ -93,13 +112,14 @@ sync_language_dir_preserve_custom() {
 
   ensure_dir "${lang_target_dir}"
 
-  if dir_empty "${lang_target_dir}"; then
-    echo "Seeding empty language directory: ${lang_target_dir} <- ${lang_source_dir}"
+  if dir_has_files_matching "${lang_target_dir}" '*.php'; then
+    echo "Syncing language directory without overwriting custom files: ${lang_target_dir}"
+  else
+    echo "Seeding PHP language directory: ${lang_target_dir} <- ${lang_source_dir}"
     cp -a "${lang_source_dir}/." "${lang_target_dir}/"
     return 0
   fi
 
-  echo "Syncing language directory without overwriting custom files: ${lang_target_dir}"
   for lang_item in "${lang_source_dir}"/*; do
     [ -e "${lang_item}" ] || continue
 
@@ -252,9 +272,10 @@ if [ -f "${APP_DIR}/htaccess" ] && [ ! -f "${APP_DIR}/.htaccess" ]; then
   mv "${APP_DIR}/htaccess" "${APP_DIR}/.htaccess"
 fi
 
-copy_dir_if_empty "${SEED_DIR}/assets/core/css" "${CSS_DIR}"
-copy_dir_if_empty "${SEED_DIR}/application/views" "${VIEWS_DIR}"
+copy_dir_if_missing_pattern "${SEED_DIR}/assets/core/css" "${CSS_DIR}" '*.css' 'CSS'
+copy_dir_if_missing_pattern "${SEED_DIR}/application/views" "${VIEWS_DIR}" '*.php' 'PHP view'
 sync_language_dir_preserve_custom
+seed_custom_view_files_if_missing
 
 ensure_runtime_dirs
 install_custom_setup_complete_view
@@ -307,4 +328,3 @@ export SEED_DIR CSS_DIR VIEWS_DIR LANG_DIR IP_LANGUAGE
 bash /usr/local/bin/compare_seeded_bind_mounts || true
 
 exec "$@"
-
