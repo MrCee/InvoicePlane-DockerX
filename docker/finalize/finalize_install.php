@@ -299,6 +299,11 @@ function h(string $value): string
         <div id="statusBanner" class="banner info show"><?= h($message) ?></div>
 
         <div class="meta-grid">
+        <div id="templateStatusBox" class="meta">
+          <span class="label">Templates</span>
+          <span id="templateStatusValue" class="value">Pending</span>
+        </div>
+
           <div class="meta">
             <span class="label">Finalizer state</span>
             <span id="metaState" class="value"><?= h($state) ?></span>
@@ -479,6 +484,21 @@ function h(string $value): string
       }
 
       function renderStatus(data) {
+        // --- template traffic light ---
+        const templateBox = document.getElementById('templateStatusBox');
+        const templateValue = document.getElementById('templateStatusValue');
+
+        if (data.state === 'templates_applied') {
+          templateBox.style.borderColor = 'rgba(31,157,85,0.6)';
+          templateValue.textContent = 'Applied (2026 Compact)';
+        } else if (data.state === 'recreating' || data.state === 'waiting') {
+          templateBox.style.borderColor = 'rgba(217,164,65,0.6)';
+          templateValue.textContent = 'Applying…';
+        } else {
+          templateBox.style.borderColor = 'rgba(214,69,69,0.6)';
+          templateValue.textContent = 'Pending';
+        }
+
         const state = typeof data.state === 'string' && data.state ? data.state : 'idle';
         const message = typeof data.message === 'string' && data.message ? data.message : 'No status message.';
         const log = typeof data.log === 'string' ? data.log : '';

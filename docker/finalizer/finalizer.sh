@@ -375,6 +375,7 @@ foreach ($rules as $key => $rule) {
 $mysqli->close();
 ' 2>&1 | redact_text_stream >> "${LOG_FILE}"; then
     log_line "[templates] Invoice template default check completed"
+    write_status "templates_applied" "Compact templates applied"
   else
     log_line "[templates] Failed to apply invoice template defaults"
   fi
